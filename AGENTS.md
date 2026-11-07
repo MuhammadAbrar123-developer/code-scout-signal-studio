@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+
+- Shared site header/footer live in `src/components/site-header.tsx` and wrap `<Outlet />` in `src/routes/__root.tsx`; each content section is its own route file so it gets its own head metadata.
+- All colors, gradients and glows are tokens/utilities in `src/styles.css`; components use only those, never raw color classes.
