@@ -209,6 +209,17 @@
   }
 }
 
+/* Google brand button (dark theme, per Google branding guidelines) */
+@utility google-btn {
+  background-color: oklch(0.18 0.002 286);
+  color: oklch(0.91 0.003 145);
+  border: 1px solid oklch(0.64 0.006 145);
+  font-weight: 500;
+  &:hover {
+    background-color: oklch(0.23 0.002 286);
+  }
+}
+
 @utility animate-rise {
   animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
