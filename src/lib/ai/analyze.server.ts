@@ -3,6 +3,8 @@ import { NoObjectGeneratedError, Output, streamText } from "ai";
 import { z } from "zod/v4";
 
 import type { AnalysisResult, Finding, Severity } from "@/lib/analysis";
+import type { ProviderId } from "@/lib/providers";
+import { ADAPTERS, PROVIDER_TIMEOUT_MS } from "./providers.server";
 import { createLovableAiGatewayRunIdFetch } from "./run-id.server";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
@@ -68,54 +70,71 @@ function clampText(s: string, max: number) {
   return t.length > max ? t.slice(0, max - 1) + "…" : t;
 }
 
+export type AnalysisTarget =
+  | { kind: "lovable" }
+  | { kind: "personal"; provider: ProviderId; apiKey: string; model: string };
+
+const JSON_HINT = `Respond only with a JSON object with these keys: summary, detected_language, score, risk_level, findings (array of objects with category, severity, title, line, explanation, fix, fixed_code).`;
+
 export async function runCodeAnalysis(input: {
   code: string;
   language: string;
+  target: AnalysisTarget;
 }): Promise<AnalysisResult> {
-  const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) throw new AnalysisError("The AI service is not configured yet.", 500);
-
-  const runIdFetch = createLovableAiGatewayRunIdFetch();
-  const provider = createOpenAI({
-    baseURL: GATEWAY_URL,
-    apiKey,
-    headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-    fetch: runIdFetch.fetch,
-  });
-
   const langHint =
     input.language === "auto" ? "Detect the language yourself." : `Stated language: ${input.language}.`;
+  const userContent = `${langHint}\n\n<untrusted_code>\n${numberLines(input.code)}\n</untrusted_code>`;
 
   let streamError: unknown;
-  const result = streamText({
-    model: provider.responses(MODEL),
-    instructions: INSTRUCTIONS,
-    messages: [
-      {
-        role: "user",
-        content: `${langHint}\n\n<untrusted_code>\n${numberLines(input.code)}\n</untrusted_code>`,
+  const onError = ({ error }: { error: unknown }) => {
+    streamError = error;
+  };
+
+  let result;
+  if (input.target.kind === "lovable") {
+    const apiKey = process.env["LOVABLE_API_KEY"];
+    if (!apiKey) throw new AnalysisError("The AI service is not configured yet.", 500);
+    const runIdFetch = createLovableAiGatewayRunIdFetch();
+    const provider = createOpenAI({
+      baseURL: GATEWAY_URL,
+      apiKey,
+      headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+      fetch: runIdFetch.fetch,
+    });
+    result = streamText({
+      model: provider.responses(MODEL),
+      instructions: INSTRUCTIONS,
+      messages: [{ role: "user", content: userContent }],
+      output: Output.object({ schema }),
+      onError,
+      providerOptions: {
+        openai: {
+          forceReasoning: true,
+          reasoningEffort: "low",
+          reasoningSummary: "auto",
+          store: false,
+          include: ["reasoning.encrypted_content"],
+        },
       },
-    ],
-    output: Output.object({ schema }),
-    onError: ({ error }) => {
-      streamError = error;
-    },
-    providerOptions: {
-      openai: {
-        forceReasoning: true,
-        reasoningEffort: "low",
-        reasoningSummary: "auto",
-        store: false,
-        include: ["reasoning.encrypted_content"],
-      },
-    },
-  });
+    });
+  } else {
+    const adapter = ADAPTERS[input.target.provider];
+    result = streamText({
+      model: adapter.model(input.target.apiKey, input.target.model),
+      instructions: `${INSTRUCTIONS}\n\n${JSON_HINT}`,
+      messages: [{ role: "user", content: `${userContent}\n\nReturn the review as JSON.` }],
+      output: Output.object({ schema }),
+      onError,
+      abortSignal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+      maxRetries: 1,
+    });
+  }
 
   let raw: z.infer<typeof schema>;
   try {
     raw = await result.output;
   } catch (error) {
-    throw toAnalysisError(streamError ?? error);
+    throw toAnalysisError(streamError ?? error, input.target.kind === "personal");
   }
 
   const lineCount = input.code.split("\n").length;
@@ -139,17 +158,36 @@ export async function runCodeAnalysis(input: {
   };
 }
 
-function toAnalysisError(error: unknown): AnalysisError {
+function toAnalysisError(error: unknown, personal = false): AnalysisError {
   if (error instanceof AnalysisError) return error;
   if (NoObjectGeneratedError.isInstance(error)) {
-    return new AnalysisError("The AI couldn't produce a readable report for this code. Try again.", 502);
+    return new AnalysisError(
+      personal
+        ? "Your provider's model didn't return a readable report. Try a different model in AI Providers."
+        : "The AI couldn't produce a readable report for this code. Try again.",
+      502,
+    );
   }
   const status =
     typeof error === "object" && error && "statusCode" in error
       ? Number((error as { statusCode: unknown }).statusCode)
       : 0;
-  // Log only the status and error type, never request payloads or keys.
-  console.error("[analyze] AI request failed", { status, name: (error as Error)?.name });
+  const name = (error as Error)?.name;
+  // Log only the status and error type, never request payloads, headers or keys.
+  console.error("[analyze] AI request failed", { status, name, personal });
+  if (personal) {
+    if (name === "TimeoutError" || name === "AbortError")
+      return new AnalysisError("Your provider took too long to answer. Try again or pick a faster model.", 504);
+    if (status === 401 || status === 403)
+      return new AnalysisError("Your provider rejected the saved API key. Update it in AI Providers.", 401);
+    if (status === 404)
+      return new AnalysisError("Your provider doesn't offer the selected model. Pick another in AI Providers.", 404);
+    if (status === 429)
+      return new AnalysisError("Your provider is rate-limiting your key or you're out of credit there.", 429);
+    if (status === 400)
+      return new AnalysisError("Your provider couldn't handle this request with the selected model.", 400);
+    return new AnalysisError("Your AI provider failed to analyze this code. Please try again.", 502);
+  }
   if (status === 429)
     return new AnalysisError("The AI is busy right now. Please wait a minute and try again.", 429);
   if (status === 402)

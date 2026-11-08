@@ -15,6 +15,20 @@
       "when": 1794017764127,
       "tag": "0001_avatar_storage_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794111875565,
+      "tag": "0002_byok_privacy_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794111908638,
+      "tag": "0003_schedule_code_retention",
+      "breakpoints": true
     }
   ]
 }

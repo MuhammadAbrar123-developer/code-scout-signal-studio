@@ -19,18 +19,21 @@ export type Database = {
           created_at: string
           id: string
           kind: string
+          provider: string
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           kind?: string
+          provider?: string
           user_id?: string
         }
         Update: {
           created_at?: string
           id?: string
           kind?: string
+          provider?: string
           user_id?: string
         }
         Relationships: []
@@ -38,10 +41,12 @@ export type Database = {
       analyses: {
         Row: {
           code: string
+          code_purged: boolean
           created_at: string
           findings: Json
           id: string
           language: string
+          provider: string
           risk_level: string
           score: number
           summary: string
@@ -50,10 +55,12 @@ export type Database = {
         }
         Insert: {
           code: string
+          code_purged?: boolean
           created_at?: string
           findings?: Json
           id?: string
           language: string
+          provider?: string
           risk_level: string
           score: number
           summary: string
@@ -62,10 +69,12 @@ export type Database = {
         }
         Update: {
           code?: string
+          code_purged?: boolean
           created_at?: string
           findings?: Json
           id?: string
           language?: string
+          provider?: string
           risk_level?: string
           score?: number
           summary?: string
@@ -98,12 +107,109 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_logs: {
+        Row: {
+          created_at: string
+          details: Json
+          event: string
+          id: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          event: string
+          id?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          event?: string
+          id?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_privacy_settings: {
+        Row: {
+          code_retention: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          code_retention?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          code_retention?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_provider_credentials: {
+        Row: {
+          ciphertext: string
+          created_at: string
+          id: string
+          iv: string
+          key_hint: string
+          last_error: string | null
+          last_tested_at: string | null
+          model: string | null
+          models: Json
+          provider: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ciphertext: string
+          created_at?: string
+          id?: string
+          iv: string
+          key_hint: string
+          last_error?: string | null
+          last_tested_at?: string | null
+          model?: string | null
+          models?: Json
+          provider: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ciphertext?: string
+          created_at?: string
+          id?: string
+          iv?: string
+          key_hint?: string
+          last_error?: string | null
+          last_tested_at?: string | null
+          model?: string | null
+          models?: Json
+          provider?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      log_failed_sign_in: {
+        Args: { _email: string; _user_agent: string }
+        Returns: undefined
+      }
+      purge_expired_code: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never
