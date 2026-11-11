@@ -4,6 +4,7 @@ import { Camera, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import { PageHeader } from "@/components/page-header";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,8 +86,7 @@ function ProfilePage() {
 
   return (
     <section className="mx-auto max-w-2xl px-6 py-12">
-      <p className="font-mono text-sm text-primary">// profile</p>
-      <h1 className="mt-2 text-3xl font-semibold">Your profile</h1>
+      <PageHeader eyebrow="Account" title="Your profile" description="How you appear in CodeGuard AI." />
 
       <div className="mt-8 rounded-xl border border-border bg-card p-6">
         <div className="flex items-center gap-5">
@@ -105,7 +105,7 @@ function ProfilePage() {
           </div>
           <div className="min-w-0">
             <p className="truncate font-display text-lg font-semibold">{profile.data?.displayName}</p>
-            <p className="truncate font-mono text-xs text-muted-foreground">{session?.user.email}</p>
+            <p className="truncate text-sm text-muted-foreground">{session?.user.email}</p>
           </div>
         </div>
 

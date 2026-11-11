@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { History, LogOut, ShieldCheck, UserRound } from "lucide-react";
+import { Activity, History, KeyRound, LogOut, Lock, ShieldCheck, UserRound } from "lucide-react";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,8 @@ import {
 import { useAuth, useProfile, useSignOut } from "@/hooks/use-auth";
 
 const navLink =
-  "rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:text-foreground";
+  "rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
+const navActive = { className: "bg-secondary text-foreground" };
 
 export function SiteHeader() {
   const { session, ready } = useAuth();
@@ -25,30 +26,33 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-6">
         <Link to="/" className="flex shrink-0 items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-signal text-primary-foreground">
-            <ShieldCheck className="h-4.5 w-4.5" strokeWidth={2.5} />
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-signal text-primary-foreground shadow-glow">
+            <ShieldCheck className="h-5 w-5" strokeWidth={2.5} />
           </span>
           <span className="hidden font-display text-lg font-semibold tracking-tight sm:inline">
             CodeGuard <span className="text-primary">AI</span>
           </span>
         </Link>
-        <nav className="flex items-center gap-1 font-mono text-sm">
-          <Link to="/about" className={`${navLink} hidden sm:inline`} activeProps={{ className: "text-foreground" }}>
-            ./why
+        <nav className="flex items-center gap-1">
+          <Link to="/about" className={`${navLink} hidden md:inline-flex`} activeProps={navActive}>
+            Our story
           </Link>
           {session ? (
             <>
-              <Link to="/analyze" className={navLink} activeProps={{ className: "text-foreground" }}>
-                ./analyze
+              <Link to="/analyze" className={navLink} activeProps={navActive}>
+                Analyze
               </Link>
-              <Link to="/history" className={navLink} activeProps={{ className: "text-foreground" }}>
-                ./history
+              <Link to="/history" className={navLink} activeProps={navActive}>
+                History
               </Link>
               <DropdownMenu>
-                <DropdownMenuTrigger className="ml-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  <UserAvatar />
+                <DropdownMenuTrigger
+                  aria-label="Account menu"
+                  className="ml-2 rounded-full transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <UserAvatar className="h-9 w-9" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-60">
                   <DropdownMenuLabel className="font-normal">
                     <p className="truncate text-sm font-medium">{profile.data?.displayName}</p>
                     <p className="truncate text-xs text-muted-foreground">{session.user.email}</p>
@@ -64,6 +68,21 @@ export function SiteHeader() {
                       <History /> Scan history
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings/providers">
+                      <KeyRound /> AI Providers
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/privacy">
+                      <Lock /> Privacy &amp; data
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/security">
+                      <Activity /> Security activity
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onSelect={() => signOut()}>
                     <LogOut /> Sign out
@@ -73,7 +92,7 @@ export function SiteHeader() {
             </>
           ) : (
             ready && (
-              <Button asChild size="sm" variant="hero" className="ml-2 font-sans">
+              <Button asChild size="sm" variant="hero" className="ml-2 h-9 px-4">
                 <Link to="/auth" search={{}}>
                   Sign in
                 </Link>
@@ -89,10 +108,10 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="border-t border-border/60">
-      <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-3 px-6 py-8 font-mono text-xs text-muted-foreground sm:flex-row sm:items-center">
-        <span>© {new Date().getFullYear()} CodeGuard AI · built by Muhammad Abrar</span>
-        <span>
-          <span className="text-success">●</span> better, safer, more reliable software
+      <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-3 px-6 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center">
+        <span>© {new Date().getFullYear()} CodeGuard AI · Built by Muhammad Abrar</span>
+        <span className="inline-flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-success" /> Better, safer, more reliable software
         </span>
       </div>
     </footer>

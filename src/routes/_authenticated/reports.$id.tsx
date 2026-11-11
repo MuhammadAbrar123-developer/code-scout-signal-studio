@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import type { Finding, Severity } from "@/lib/analysis";
+import { providerName } from "@/lib/providers";
 
 const reportQuery = (id: string) =>
   queryOptions({
@@ -25,7 +26,7 @@ const reportQuery = (id: string) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("analyses")
-        .select("id, title, language, code, summary, risk_level, score, findings, created_at")
+        .select("id, title, language, code, code_purged, provider, summary, risk_level, score, findings, created_at")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
@@ -84,16 +85,18 @@ function ReportPage() {
     <section className="mx-auto max-w-6xl px-6 py-10">
       <Link
         to="/history"
-        className="inline-flex items-center gap-2 font-mono text-sm text-muted-foreground hover:text-foreground"
+        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> history
+        <ArrowLeft className="h-4 w-4" /> Back to history
       </Link>
 
       <div className="mt-6 flex flex-col gap-6 rounded-xl border border-border bg-card p-6 sm:flex-row sm:items-center">
         <ScoreRing score={data.score} />
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <span>{data.language}</span>
+            <span>·</span>
+            <span>{providerName(data.provider)}</span>
             <span>·</span>
             <span>{new Date(data.created_at).toLocaleString()}</span>
             <span>·</span>
@@ -126,7 +129,7 @@ function ReportPage() {
       </div>
 
       <div className="mt-6">
-        <ReportView code={data.code} findings={findings} />
+        <ReportView code={data.code} codePurged={data.code_purged} findings={findings} />
       </div>
     </section>
   );

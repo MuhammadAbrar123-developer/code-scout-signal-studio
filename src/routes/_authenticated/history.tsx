@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { FileCode2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { PageHeader } from "@/components/page-header";
 import { SeverityBadge } from "@/components/report-view";
 import {
   AlertDialog,
@@ -65,18 +66,19 @@ function HistoryPage() {
   }
 
   return (
-    <section className="mx-auto max-w-5xl px-6 py-12">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-mono text-sm text-primary">// history</p>
-          <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Your scans</h1>
-        </div>
-        <Button asChild variant="hero">
-          <Link to="/analyze">
-            <Plus /> New scan
-          </Link>
-        </Button>
-      </div>
+    <section className="mx-auto max-w-6xl px-6 py-12">
+      <PageHeader
+        eyebrow="History"
+        title="Your scans"
+        description="Every report you've run. Open one to see the details, or delete what you don't need."
+        actions={
+          <Button asChild variant="hero" size="lg">
+            <Link to="/analyze">
+              <Plus /> New scan
+            </Link>
+          </Button>
+        }
+      />
 
       {data.length === 0 ? (
         <div className="mt-10 rounded-xl border border-dashed border-border bg-card p-12 text-center">
@@ -93,7 +95,7 @@ function HistoryPage() {
               </span>
               <Link to="/reports/$id" params={{ id: a.id }} className="min-w-0 flex-1">
                 <p className="truncate font-medium text-foreground group-hover:text-primary">{a.title}</p>
-                <p className="mt-0.5 flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
+                <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <span>{a.language}</span>
                   <span>·</span>
                   <span>{new Date(a.created_at).toLocaleString()}</span>

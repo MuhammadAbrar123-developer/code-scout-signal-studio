@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, ScanSearch } from "lucide-react";
+import { KeyRound, Loader2, ScanSearch, Wand2 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -16,10 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
-import { ANALYSES_PER_HOUR, LANGUAGES, MAX_CODE_CHARS, MAX_TITLE_CHARS } from "@/lib/analysis";
+import { LANGUAGES, MAX_CODE_CHARS, MAX_TITLE_CHARS } from "@/lib/analysis";
 import { analyzeCode } from "@/lib/analyze.functions";
+import { providerName, type AnalysisProvider } from "@/lib/providers";
+import { listProviders } from "@/lib/providers.functions";
 
 export const Route = createFileRoute("/_authenticated/analyze")({
   head: () => ({
@@ -56,26 +57,34 @@ const SAMPLE = `def login(username, password):
 function AnalyzePage() {
   const navigate = useNavigate();
   const analyze = useServerFn(analyzeCode);
-  const { session } = useAuth();
+  const fetchProviders = useServerFn(listProviders);
   const [code, setCode] = useState("");
   const [title, setTitle] = useState("");
   const [language, setLanguage] = useState<(typeof LANGUAGES)[number]>("auto");
+  const [provider, setProvider] = useState<AnalysisProvider>("lovable");
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState(0);
 
-  const usage = useQuery({
-    queryKey: ["usage", session?.user.id],
-    enabled: !!session,
-    queryFn: async () => {
-      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-      const { count } = await supabase
-        .from("ai_usage_logs")
-        .select("id", { count: "exact", head: true })
-        .gte("created_at", since);
-      return count ?? 0;
-    },
-  });
+  const providers = useQuery({ queryKey: ["providers"], queryFn: () => fetchProviders() });
+
+  const options: { id: AnalysisProvider; label: string; used: number; limit: number; model: string | null }[] = [];
+  if (providers.data?.platform.configured) {
+    options.push({
+      id: "lovable",
+      label: providerName("lovable"),
+      used: providers.data.platform.usedLastHour,
+      limit: providers.data.platform.limitPerHour,
+      model: null,
+    });
+  }
+  for (const p of providers.data?.personal ?? []) {
+    if (p.connected && p.status === "connected" && p.model) {
+      options.push({ id: p.provider, label: `${providerName(p.provider)} (your key)`, used: p.usedLastHour, limit: p.limitPerHour, model: p.model });
+    }
+  }
+  const selected = options.find((o) => o.id === provider) ?? options[0];
+  const remaining = selected ? Math.max(0, selected.limit - selected.used) : null;
 
   useEffect(() => {
     if (!busy) return;
@@ -86,16 +95,28 @@ function AnalyzePage() {
 
   const lines = code ? code.split("\n").length : 0;
   const tooLong = code.length > MAX_CODE_CHARS;
-  const remaining = usage.data === undefined ? null : Math.max(0, ANALYSES_PER_HOUR - usage.data);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!consent) { toast.error("Please confirm you agree to send this code for AI analysis."); return; }
-    if (code.trim().length < 10) { toast.error("Paste at least a few lines of code."); return; }
-    if (tooLong) { toast.error("That code is too long."); return; }
+    if (!selected) {
+      toast.error("No AI provider is available right now.");
+      return;
+    }
+    if (!consent) {
+      toast.error("Please confirm you agree to send this code for AI analysis.");
+      return;
+    }
+    if (code.trim().length < 10) {
+      toast.error("Paste at least a few lines of code.");
+      return;
+    }
+    if (tooLong) {
+      toast.error("That code is too long.");
+      return;
+    }
     setBusy(true);
     try {
-      const res = await analyze({ data: { code, title, language, consent: true } });
+      const res = await analyze({ data: { code, title, language, provider: selected.id, consent: true } });
       if (!res.ok) {
         toast.error(res.error);
         return;
@@ -105,21 +126,20 @@ function AnalyzePage() {
       toast.error("The analysis failed. Please try again.");
     } finally {
       setBusy(false);
-      usage.refetch();
+      providers.refetch();
     }
   }
 
   return (
-    <section className="mx-auto max-w-5xl px-6 py-12">
-      <p className="font-mono text-sm text-primary">// new scan</p>
-      <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Analyze your code</h1>
-      <p className="mt-2 text-muted-foreground">
-        Paste a file or snippet. You'll get bugs, security issues, speed tips and quality notes,
-        explained in plain language.
-      </p>
+    <section className="mx-auto max-w-6xl px-6 py-12">
+      <PageHeader
+        eyebrow="New scan"
+        title="Analyze your code"
+        description="Paste a file or snippet. You'll get bugs, security issues, speed tips and quality notes, explained in plain language."
+      />
 
-      <form onSubmit={onSubmit} className="mt-8 space-y-5">
-        <div className="grid gap-4 sm:grid-cols-[1fr_200px]">
+      <form onSubmit={onSubmit} className="mt-10 grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="min-w-0 space-y-5">
           <div className="space-y-1.5">
             <Label htmlFor="title">Name (optional)</Label>
             <Input
@@ -130,81 +150,108 @@ function AnalyzePage() {
               placeholder="e.g. Login function, homework 3"
             />
           </div>
-          <div className="space-y-1.5">
-            <Label>Language</Label>
-            <Select value={language} onValueChange={(v) => setLanguage(v as typeof language)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {LANGUAGES.map((l) => (
-                  <SelectItem key={l} value={l}>
-                    {l === "auto" ? "Detect automatically" : l}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
 
-        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-panel">
-          <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-2.5">
-            <div className="flex gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-destructive/70" />
-              <span className="h-2.5 w-2.5 rounded-full bg-warning/70" />
-              <span className="h-2.5 w-2.5 rounded-full bg-success/70" />
+          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-panel">
+            <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-2">
+              <div className="flex gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-destructive/70" />
+                <span className="h-2.5 w-2.5 rounded-full bg-warning/70" />
+                <span className="h-2.5 w-2.5 rounded-full bg-success/70" />
+              </div>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setCode(SAMPLE)}>
+                <Wand2 /> Try a sample
+              </Button>
             </div>
-            <button
-              type="button"
-              onClick={() => setCode(SAMPLE)}
-              className="font-mono text-xs text-muted-foreground hover:text-primary"
-            >
-              try a sample
-            </button>
-          </div>
-          <textarea
-            aria-label="Your code"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            spellCheck={false}
-            placeholder="// paste your code here"
-            className="block min-h-[360px] w-full resize-y bg-card p-4 font-mono text-[13px] leading-6 text-foreground outline-none placeholder:text-muted-foreground/60"
-          />
-          <div className="flex items-center justify-between border-t border-border bg-surface px-4 py-2 font-mono text-xs text-muted-foreground">
-            <span>{lines} lines</span>
-            <span className={tooLong ? "text-destructive" : ""}>
-              {code.length.toLocaleString()} / {MAX_CODE_CHARS.toLocaleString()} chars
-            </span>
+            <textarea
+              aria-label="Your code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              spellCheck={false}
+              placeholder="Paste your code here…"
+              className="block min-h-[420px] w-full resize-y bg-card p-4 font-mono text-[13px] leading-6 text-foreground outline-none placeholder:font-sans placeholder:text-muted-foreground/60"
+            />
+            <div className="flex items-center justify-between border-t border-border bg-surface px-4 py-2 text-xs text-muted-foreground">
+              <span>{lines} lines</span>
+              <span className={tooLong ? "text-destructive" : ""}>
+                {code.length.toLocaleString()} / {MAX_CODE_CHARS.toLocaleString()} characters
+              </span>
+            </div>
           </div>
         </div>
 
-        <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-4 text-sm">
-          <Checkbox
-            checked={consent}
-            onCheckedChange={(v) => setConsent(v === true)}
-            className="mt-0.5"
-          />
-          <span className="text-muted-foreground">
-            <span className="text-foreground">I agree to send this code to an AI service for analysis.</span>{" "}
-            Don't paste passwords, API keys or private data. The code and its report are saved to
-            your history, and you can delete them at any time.
-          </span>
-        </label>
+        <aside className="space-y-5 lg:pt-[26px]">
+          <div className="space-y-4 rounded-xl border border-border bg-card p-5">
+            <div className="space-y-1.5">
+              <Label>Language</Label>
+              <Select value={language} onValueChange={(v) => setLanguage(v as typeof language)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LANGUAGES.map((l) => (
+                    <SelectItem key={l} value={l}>
+                      {l === "auto" ? "Detect automatically" : l}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>AI provider</Label>
+              <Select
+                value={selected?.id ?? ""}
+                onValueChange={(v) => setProvider(v as AnalysisProvider)}
+                disabled={options.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={providers.isLoading ? "Loading…" : "None available"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {options.map((o) => (
+                    <SelectItem key={o.id} value={o.id}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selected?.model && (
+                <p className="text-xs text-muted-foreground">Model: {selected.model}</p>
+              )}
+              <Link
+                to="/settings/providers"
+                className="inline-flex items-center gap-1.5 pt-1 text-xs font-medium text-primary hover:underline"
+              >
+                <KeyRound className="h-3.5 w-3.5" /> Use your own AI key
+              </Link>
+            </div>
+          </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <span className="font-mono text-xs text-muted-foreground">
-            {remaining === null ? "" : `${remaining} of ${ANALYSES_PER_HOUR} scans left this hour`}
-          </span>
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-card p-5 text-sm">
+            <Checkbox checked={consent} onCheckedChange={(v) => setConsent(v === true)} className="mt-0.5" />
+            <span className="text-muted-foreground">
+              <span className="font-medium text-foreground">
+                I agree to send this code to {selected ? selected.label.replace(" (your key)", "") : "the AI provider"} for analysis.
+              </span>{" "}
+              Don't paste passwords, API keys or private data. You can delete reports at any time.
+            </span>
+          </label>
+
           <Button
             type="submit"
             variant="hero"
-            size="lg"
-            disabled={busy || !consent || tooLong || remaining === 0}
+            size="xl"
+            className="w-full"
+            disabled={busy || !consent || tooLong || remaining === 0 || !selected}
           >
             {busy ? <Loader2 className="animate-spin" /> : <ScanSearch />}
             {busy ? STEPS[step] : "Run analysis"}
           </Button>
-        </div>
+          {remaining !== null && selected && (
+            <p className="text-center text-xs text-muted-foreground">
+              {remaining} of {selected.limit} scans left this hour
+            </p>
+          )}
+        </aside>
       </form>
     </section>
   );

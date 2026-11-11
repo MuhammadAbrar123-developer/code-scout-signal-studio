@@ -66,7 +66,7 @@ function compatible(name: string, baseURL: string, apiKey: string, strict: boole
     name,
     baseURL,
     apiKey,
-    headers: extra,
+    headers: extra ?? {},
     supportsStructuredOutputs: strict,
   });
 }

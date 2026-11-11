@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
@@ -37,13 +39,13 @@ function About() {
       <div className="relative mx-auto max-w-3xl px-6 pb-24 pt-16">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 font-mono text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> cd ..
+          <ArrowLeft className="h-4 w-4" /> Back to home
         </Link>
 
-        <p className="mt-12 font-mono text-sm text-primary">// the story</p>
-        <h1 className="mt-3 animate-rise text-4xl font-semibold leading-tight sm:text-5xl">
+        <span className="eyebrow mt-12">The story</span>
+        <h1 className="mt-4 animate-rise text-4xl font-semibold leading-tight sm:text-5xl">
           Why I built <span className="text-signal">CodeGuard AI</span>
         </h1>
 
@@ -64,7 +66,7 @@ function About() {
               key={p}
               className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3"
             >
-              <span className="mt-0.5 font-mono text-sm text-destructive">✕</span>
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
               <span className="text-foreground/90">{p}</span>
             </li>
           ))}
@@ -90,12 +92,18 @@ function About() {
         </div>
 
         <div className="mt-14 rounded-xl border border-primary/30 bg-card p-8 shadow-glow">
-          <p className="font-mono text-xs uppercase tracking-widest text-primary">My vision</p>
+          <span className="eyebrow">My vision</span>
           <p className="mt-4 font-display text-2xl font-medium leading-snug">
             To help developers build better, safer, and more reliable software through
             intelligent code analysis.
           </p>
-          <p className="mt-6 font-mono text-sm text-muted-foreground">— Muhammad Abrar</p>
+          <p className="mt-6 text-sm font-medium text-muted-foreground">— Muhammad Abrar</p>
+        </div>
+
+        <div className="mt-12 flex flex-wrap gap-3">
+          <Button asChild variant="hero" size="lg">
+            <Link to="/analyze">Try CodeGuard AI</Link>
+          </Button>
         </div>
       </div>
     </article>

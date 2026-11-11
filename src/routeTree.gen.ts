@@ -16,8 +16,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAnalyzeRouteImport } from './routes/_authenticated/analyze'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
+import { Route as AuthenticatedPrivacyRouteImport } from './routes/_authenticated/privacy'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedReportsIdRouteImport } from './routes/_authenticated/reports.$id'
+import { Route as AuthenticatedSettingsProvidersRouteImport } from './routes/_authenticated/settings.providers'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,9 +56,19 @@ const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
   path: '/history',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPrivacyRoute = AuthenticatedPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedReportsIdRoute = AuthenticatedReportsIdRouteImport.update({
@@ -63,6 +76,12 @@ const AuthenticatedReportsIdRoute = AuthenticatedReportsIdRouteImport.update({
   path: '/reports/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSettingsProvidersRoute =
+  AuthenticatedSettingsProvidersRouteImport.update({
+    id: '/settings/providers',
+    path: '/settings/providers',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -71,8 +90,11 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/analyze': typeof AuthenticatedAnalyzeRoute
   '/history': typeof AuthenticatedHistoryRoute
+  '/privacy': typeof AuthenticatedPrivacyRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/security': typeof AuthenticatedSecurityRoute
   '/reports/$id': typeof AuthenticatedReportsIdRoute
+  '/settings/providers': typeof AuthenticatedSettingsProvidersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -81,8 +103,11 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/analyze': typeof AuthenticatedAnalyzeRoute
   '/history': typeof AuthenticatedHistoryRoute
+  '/privacy': typeof AuthenticatedPrivacyRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/security': typeof AuthenticatedSecurityRoute
   '/reports/$id': typeof AuthenticatedReportsIdRoute
+  '/settings/providers': typeof AuthenticatedSettingsProvidersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -93,8 +118,11 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/analyze': typeof AuthenticatedAnalyzeRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
+  '/_authenticated/privacy': typeof AuthenticatedPrivacyRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/_authenticated/reports/$id': typeof AuthenticatedReportsIdRoute
+  '/_authenticated/settings/providers': typeof AuthenticatedSettingsProvidersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -105,8 +133,11 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/analyze'
     | '/history'
+    | '/privacy'
     | '/profile'
+    | '/security'
     | '/reports/$id'
+    | '/settings/providers'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -115,8 +146,11 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/analyze'
     | '/history'
+    | '/privacy'
     | '/profile'
+    | '/security'
     | '/reports/$id'
+    | '/settings/providers'
   id:
     | '__root__'
     | '/'
@@ -126,8 +160,11 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/analyze'
     | '/_authenticated/history'
+    | '/_authenticated/privacy'
     | '/_authenticated/profile'
+    | '/_authenticated/security'
     | '/_authenticated/reports/$id'
+    | '/_authenticated/settings/providers'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -189,11 +226,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHistoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/privacy': {
+      id: '/_authenticated/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof AuthenticatedPrivacyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/security': {
+      id: '/_authenticated/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof AuthenticatedSecurityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/reports/$id': {
@@ -203,21 +254,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/providers': {
+      id: '/_authenticated/settings/providers'
+      path: '/settings/providers'
+      fullPath: '/settings/providers'
+      preLoaderRoute: typeof AuthenticatedSettingsProvidersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyzeRoute: typeof AuthenticatedAnalyzeRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedPrivacyRoute: typeof AuthenticatedPrivacyRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
   AuthenticatedReportsIdRoute: typeof AuthenticatedReportsIdRoute
+  AuthenticatedSettingsProvidersRoute: typeof AuthenticatedSettingsProvidersRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalyzeRoute: AuthenticatedAnalyzeRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedPrivacyRoute: AuthenticatedPrivacyRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
   AuthenticatedReportsIdRoute: AuthenticatedReportsIdRoute,
+  AuthenticatedSettingsProvidersRoute: AuthenticatedSettingsProvidersRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

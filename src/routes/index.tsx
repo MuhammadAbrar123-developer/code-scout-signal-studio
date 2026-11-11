@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Bug, Gauge, ShieldAlert, Sparkles } from "lucide-react";
 
 import { ScanPreview } from "@/components/scan-preview";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -28,25 +29,21 @@ export const Route = createFileRoute("/")({
 const pillars = [
   {
     icon: Bug,
-    tag: "01",
     title: "Bug detection",
     body: "Spot hidden errors, edge cases and crashes that are easy to miss when reviewing by hand.",
   },
   {
     icon: ShieldAlert,
-    tag: "02",
     title: "Security scanning",
     body: "Catch weaknesses like injection, unsafe input handling and exposed secrets early.",
   },
   {
     icon: Gauge,
-    tag: "03",
     title: "Performance",
     body: "Find slow loops, wasted queries and heavy operations, with clear ways to speed them up.",
   },
   {
     icon: Sparkles,
-    tag: "04",
     title: "Code quality",
     body: "Get plain-language explanations that help you understand your code and write it cleaner.",
   },
@@ -55,16 +52,15 @@ const pillars = [
 function Index() {
   return (
     <>
-      {/* Hero */}
       <section className="relative overflow-hidden bg-hero">
         <div className="pointer-events-none absolute inset-0 bg-grid opacity-60" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 pb-24 pt-20 lg:grid-cols-[1.05fr_1fr] lg:pt-28">
           <div className="min-w-0 animate-rise">
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-xs text-primary">
+            <span className="eyebrow">
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              software engineering × cybersecurity × AI
+              Engineering · Security · AI
             </span>
-            <h1 className="mt-6 text-5xl font-semibold leading-[1.02] sm:text-6xl">
+            <h1 className="mt-6 text-5xl font-semibold leading-[1.05] sm:text-6xl">
               Write code.
               <br />
               <span className="text-signal">We'll guard it.</span>
@@ -74,19 +70,15 @@ function Index() {
               explains every problem so you actually learn from it.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
-              <Link
-                to="/analyze"
-                className="group inline-flex items-center gap-2 rounded-md bg-signal px-5 py-3 font-medium text-primary-foreground shadow-glow transition-transform hover:-translate-y-0.5"
-              >
-                Analyze your code
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              <Link
-                to="/about"
-                className="font-mono text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <span className="text-warning">›</span> why I built it
-              </Link>
+              <Button asChild variant="hero" size="xl" className="group">
+                <Link to="/analyze">
+                  Analyze your code
+                  <ArrowRight className="transition-transform group-hover:translate-x-1" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="xl">
+                <Link to="/about">Why I built it</Link>
+              </Button>
             </div>
           </div>
           <div className="min-w-0 animate-rise [animation-delay:150ms]">
@@ -95,26 +87,24 @@ function Index() {
         </div>
       </section>
 
-      {/* Pillars */}
       <section className="border-t border-border/60">
         <div className="mx-auto max-w-6xl px-6 py-24">
-          <div className="max-w-2xl">
-            <p className="font-mono text-sm text-primary">// one platform, four checks</p>
-            <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="eyebrow">One platform, four checks</span>
+            <h2 className="mt-4 text-3xl font-semibold leading-tight sm:text-4xl">
               Stop juggling separate tools for debugging, security and speed.
             </h2>
           </div>
-          <div className="mt-14 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {pillars.map((p) => (
               <div
                 key={p.title}
-                className="group relative bg-card p-7 transition-colors hover:bg-surface"
+                className="group rounded-2xl border border-border bg-card p-7 transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-glow"
               >
-                <div className="flex items-center justify-between">
-                  <p.icon className="h-6 w-6 text-primary" strokeWidth={1.75} />
-                  <span className="font-mono text-xs text-muted-foreground">{p.tag}</span>
-                </div>
-                <h3 className="mt-8 text-lg font-semibold">{p.title}</h3>
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <p.icon className="h-5 w-5" strokeWidth={2} />
+                </span>
+                <h3 className="mt-6 text-lg font-semibold">{p.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.body}</p>
               </div>
             ))}
@@ -122,10 +112,9 @@ function Index() {
         </div>
       </section>
 
-      {/* Vision */}
       <section className="border-t border-border/60 bg-surface">
-        <div className="mx-auto max-w-4xl px-6 py-24 text-center">
-          <p className="font-mono text-sm text-warning">$ cat vision.txt</p>
+        <div className="mx-auto max-w-3xl px-6 py-24 text-center">
+          <span className="eyebrow">Our vision</span>
           <blockquote className="mt-6 font-display text-3xl font-medium leading-snug sm:text-4xl">
             “To help developers build <span className="text-signal">better, safer,</span> and
             more reliable software through intelligent code analysis.”
@@ -133,6 +122,9 @@ function Index() {
           <p className="mt-6 text-muted-foreground">
             Made for students and beginners first, useful for every developer.
           </p>
+          <Button asChild variant="hero" size="lg" className="mt-9">
+            <Link to="/analyze">Start your first scan</Link>
+          </Button>
         </div>
       </section>
     </>

@@ -68,7 +68,15 @@ export function ScoreRing({ score }: { score: number }) {
   );
 }
 
-export function ReportView({ code, findings }: { code: string; findings: Finding[] }) {
+export function ReportView({
+  code,
+  codePurged = false,
+  findings,
+}: {
+  code: string;
+  codePurged?: boolean;
+  findings: Finding[];
+}) {
   const [filter, setFilter] = useState<Category | "all">("all");
   const [activeLine, setActiveLine] = useState<number | null>(null);
 
@@ -131,19 +139,19 @@ export function ReportView({ code, findings }: { code: string; findings: Finding
             >
               <div className="flex flex-wrap items-center gap-2">
                 <SeverityBadge severity={f.severity} />
-                <span className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
                   <Icon className="h-3.5 w-3.5" /> {CATEGORY_LABEL[f.category]}
                 </span>
                 {f.line != null && (
-                  <span className="font-mono text-xs text-muted-foreground">· line {f.line}</span>
+                  <span className="text-xs text-muted-foreground">· Line {f.line}</span>
                 )}
               </div>
               <h3 className="mt-2.5 font-display text-base font-semibold">{f.title}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-foreground/80">{f.explanation}</p>
-              <p className="mt-3 text-sm leading-relaxed">
-                <span className="font-mono text-xs text-success">fix › </span>
+              <div className="mt-3 rounded-lg border border-success/25 bg-success/5 px-3 py-2 text-sm leading-relaxed">
+                <span className="font-semibold text-success">How to fix: </span>
                 <span className="text-foreground/90">{f.fix}</span>
-              </p>
+              </div>
               {f.fixed_code && (
                 <pre className="mt-3 overflow-x-auto rounded-md border border-border bg-surface p-3 font-mono text-[12px] leading-5 text-foreground/90">
                   <code>{f.fixed_code}</code>
@@ -152,18 +160,23 @@ export function ReportView({ code, findings }: { code: string; findings: Finding
             </article>
           );
         })}
-        <p className="font-mono text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           AI suggestions can be wrong. Review fixes before using them — CodeGuard never runs your code.
         </p>
       </div>
 
       <div className="min-w-0">
         <div className="sticky top-20 overflow-hidden rounded-xl border border-border bg-card shadow-panel">
-          <div className="border-b border-border bg-surface px-4 py-2.5 font-mono text-xs text-muted-foreground">
-            your code
+          <div className="border-b border-border bg-surface px-4 py-2.5 text-xs font-medium text-muted-foreground">
+            Your code
           </div>
+          {codePurged && (
+            <p className="p-6 text-sm text-muted-foreground">
+              The code for this report was removed because of your privacy settings. The findings are kept.
+            </p>
+          )}
           <div className="max-h-[70vh] overflow-auto font-mono text-[12.5px] leading-6">
-            {codeLines.map((ln, i) => {
+            {!codePurged && codeLines.map((ln, i) => {
               const n = i + 1;
               const sev = flagged.get(n);
               return (
@@ -200,7 +213,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-xs transition-colors ${
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
         active
           ? "border-primary/50 bg-primary/15 text-primary"
           : "border-border bg-card text-muted-foreground hover:text-foreground"
