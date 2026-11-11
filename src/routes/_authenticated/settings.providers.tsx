@@ -209,7 +209,7 @@ function ProviderCard({ p }: { p: ProviderStatus }) {
         <div className="mt-4 space-y-1.5">
           <Label>Model</Label>
           <Select
-            value={p.model ?? undefined}
+            value={p.model ?? ""}
             onValueChange={(m) => run("model", () => setModel({ data: { provider: p.provider, model: m } }))}
             disabled={busy !== null}
           >
