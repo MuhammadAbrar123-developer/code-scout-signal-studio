@@ -8,5 +8,5 @@
 - [ ] Privacy & Data page (reports, delete all, code retention, delete credentials, delete account)
 - [ ] Security activity page (sign-ins, failed sign-ins, provider/credential events, limit warnings, sign out everywhere)
 - [ ] Optional two-step sign-in (MFA)
-- [ ] Design polish: remove "//", "./", "$", "cd .." code-style slashes from labels/nav; more attractive, clearly clickable buttons; cleaner text/heading alignment
+- [x] Design polish: remove "//", "./", "$", "cd .." code-style slashes from labels/nav; more attractive, clearly clickable buttons; cleaner text/heading alignment
 - [ ] AI assistant (Lovable AI) that answers questions about CodeGuard AI

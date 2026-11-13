@@ -34,9 +34,8 @@ const problems = [
 
 function About() {
   return (
-    <article className="relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[480px] bg-hero" />
-      <div className="relative mx-auto max-w-3xl px-6 pb-24 pt-16">
+    <article className="bg-hero">
+      <div className="mx-auto max-w-3xl px-6 pb-24 pt-12">
         <Link
           to="/"
           className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -44,7 +43,9 @@ function About() {
           <ArrowLeft className="h-4 w-4" /> Back to home
         </Link>
 
-        <span className="eyebrow mt-12">The story</span>
+        <div className="mt-10">
+          <span className="eyebrow">The story</span>
+        </div>
         <h1 className="mt-4 animate-rise text-4xl font-semibold leading-tight sm:text-5xl">
           Why I built <span className="text-signal">CodeGuard AI</span>
         </h1>
@@ -91,7 +92,7 @@ function About() {
           </p>
         </div>
 
-        <div className="mt-14 rounded-xl border border-primary/30 bg-card p-8 shadow-glow">
+        <div className="mt-14 rounded-xl border border-l-4 border-border border-l-primary bg-card p-8">
           <span className="eyebrow">My vision</span>
           <p className="mt-4 font-display text-2xl font-medium leading-snug">
             To help developers build better, safer, and more reliable software through

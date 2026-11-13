@@ -26,10 +26,10 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-6">
         <Link to="/" className="flex shrink-0 items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-signal text-primary-foreground shadow-glow">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-signal text-primary-foreground">
             <ShieldCheck className="h-5 w-5" strokeWidth={2.5} />
           </span>
-          <span className="hidden font-display text-lg font-semibold tracking-tight sm:inline">
+          <span className="hidden font-display text-lg font-semibold tracking-tight min-[400px]:inline">
             CodeGuard <span className="text-primary">AI</span>
           </span>
         </Link>
@@ -92,7 +92,7 @@ export function SiteHeader() {
             </>
           ) : (
             ready && (
-              <Button asChild size="sm" variant="hero" className="ml-2 h-9 px-4">
+              <Button asChild size="sm" variant="hero" className="ml-2">
                 <Link to="/auth" search={{}}>
                   Sign in
                 </Link>

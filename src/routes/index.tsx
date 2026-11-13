@@ -52,31 +52,27 @@ const pillars = [
 function Index() {
   return (
     <>
-      <section className="relative overflow-hidden bg-hero">
-        <div className="pointer-events-none absolute inset-0 bg-grid opacity-60" />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 pb-24 pt-20 lg:grid-cols-[1.05fr_1fr] lg:pt-28">
+      <section className="bg-hero">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 lg:grid-cols-2 lg:gap-16 lg:py-28">
           <div className="min-w-0 animate-rise">
-            <span className="eyebrow">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Engineering · Security · AI
-            </span>
-            <h1 className="mt-6 text-5xl font-semibold leading-[1.05] sm:text-6xl">
+            <span className="eyebrow">Engineering · Security · AI</span>
+            <h1 className="mt-5 text-4xl font-semibold leading-[1.1] sm:text-5xl lg:text-[3.5rem]">
               Write code.
               <br />
               <span className="text-signal">We'll guard it.</span>
             </h1>
-            <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
               CodeGuard AI finds bugs, security weaknesses and slow code in one place, and
               explains every problem so you actually learn from it.
             </p>
-            <div className="mt-9 flex flex-wrap items-center gap-3">
-              <Button asChild variant="hero" size="xl" className="group">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button asChild variant="hero" size="lg" className="group">
                 <Link to="/analyze">
                   Analyze your code
-                  <ArrowRight className="transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="xl">
+              <Button asChild variant="outline" size="lg">
                 <Link to="/about">Why I built it</Link>
               </Button>
             </div>
@@ -88,23 +84,23 @@ function Index() {
       </section>
 
       <section className="border-t border-border/60">
-        <div className="mx-auto max-w-6xl px-6 py-24">
-          <div className="mx-auto max-w-2xl text-center">
+        <div className="mx-auto max-w-6xl px-6 py-20 lg:py-24">
+          <div className="max-w-2xl">
             <span className="eyebrow">One platform, four checks</span>
             <h2 className="mt-4 text-3xl font-semibold leading-tight sm:text-4xl">
               Stop juggling separate tools for debugging, security and speed.
             </h2>
           </div>
-          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {pillars.map((p) => (
               <div
                 key={p.title}
-                className="group rounded-2xl border border-border bg-card p-7 transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-glow"
+                className="rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/40"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <p.icon className="h-5 w-5" strokeWidth={2} />
                 </span>
-                <h3 className="mt-6 text-lg font-semibold">{p.title}</h3>
+                <h3 className="mt-5 text-base font-semibold">{p.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.body}</p>
               </div>
             ))}
@@ -113,17 +109,22 @@ function Index() {
       </section>
 
       <section className="border-t border-border/60 bg-surface">
-        <div className="mx-auto max-w-3xl px-6 py-24 text-center">
-          <span className="eyebrow">Our vision</span>
-          <blockquote className="mt-6 font-display text-3xl font-medium leading-snug sm:text-4xl">
-            “To help developers build <span className="text-signal">better, safer,</span> and
-            more reliable software through intelligent code analysis.”
-          </blockquote>
-          <p className="mt-6 text-muted-foreground">
-            Made for students and beginners first, useful for every developer.
-          </p>
-          <Button asChild variant="hero" size="lg" className="mt-9">
-            <Link to="/analyze">Start your first scan</Link>
+        <div className="mx-auto flex max-w-6xl flex-col items-start gap-8 px-6 py-20 lg:flex-row lg:items-center lg:justify-between lg:py-24">
+          <div className="max-w-2xl">
+            <span className="eyebrow">Our vision</span>
+            <p className="mt-4 font-display text-2xl font-medium leading-snug sm:text-3xl">
+              To help developers build better, safer, and more reliable software through
+              intelligent code analysis.
+            </p>
+            <p className="mt-4 text-muted-foreground">
+              Made for students and beginners first, useful for every developer.
+            </p>
+          </div>
+          <Button asChild variant="hero" size="lg" className="group shrink-0">
+            <Link to="/analyze">
+              Start your first scan
+              <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
+            </Link>
           </Button>
         </div>
       </section>

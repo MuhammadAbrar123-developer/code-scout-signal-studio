@@ -101,11 +101,14 @@
   --sidebar-ring: oklch(0.83 0.135 205);
 
   --gradient-signal: linear-gradient(120deg, var(--primary), var(--primary-glow));
-  --gradient-hero:
-    radial-gradient(60% 50% at 75% 20%, color-mix(in oklab, var(--primary) 18%, transparent), transparent 70%),
-    radial-gradient(40% 40% at 10% 80%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 70%);
-  --shadow-glow: 0 0 0 1px color-mix(in oklab, var(--primary) 30%, transparent),
-    0 20px 60px -20px color-mix(in oklab, var(--primary) 45%, transparent);
+  --gradient-hero: radial-gradient(
+    70% 60% at 70% 0%,
+    color-mix(in oklab, var(--primary) 9%, transparent),
+    transparent 70%
+  );
+  --shadow-glow: 0 0 0 1px color-mix(in oklab, var(--primary) 25%, transparent),
+    0 12px 32px -16px color-mix(in oklab, var(--primary) 35%, transparent);
+  --shadow-button: inset 0 1px 0 oklch(1 0 0 / 0.25), 0 1px 2px oklch(0 0 0 / 0.4);
   --shadow-panel: 0 30px 80px -30px oklch(0 0 0 / 0.7);
 }
 
@@ -143,14 +146,11 @@
 }
 
 @utility text-signal {
-  background-image: var(--gradient-signal);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+  color: var(--primary);
 }
 
 @utility bg-signal {
-  background-image: var(--gradient-signal);
+  background-color: var(--primary);
 }
 
 @utility shadow-glow {
@@ -210,15 +210,12 @@
 }
 
 @utility btn-hero {
-  position: relative;
-  background-image: var(--gradient-signal);
-  box-shadow: var(--shadow-glow);
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 600;
+  box-shadow: var(--shadow-button);
   &:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.08);
-    box-shadow:
-      0 0 0 1px color-mix(in oklab, var(--primary) 45%, transparent),
-      0 24px 60px -18px color-mix(in oklab, var(--primary) 65%, transparent);
+    background-color: color-mix(in oklab, var(--primary) 88%, white);
   }
 }
 
@@ -226,13 +223,9 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  border-radius: 9999px;
-  border: 1px solid color-mix(in oklab, var(--primary) 30%, transparent);
-  background: color-mix(in oklab, var(--primary) 10%, transparent);
-  padding: 0.25rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--primary);
 }

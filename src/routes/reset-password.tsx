@@ -67,7 +67,7 @@ function ResetPassword() {
               <Label htmlFor="pw2">Confirm password</Label>
               <Input id="pw2" type="password" minLength={8} required value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
             </div>
-            <Button type="submit" variant="hero" className="h-10 w-full" disabled={busy}>
+            <Button type="submit" variant="hero" size="lg" className="w-full" disabled={busy}>
               {busy ? "Saving…" : "Update password"}
             </Button>
           </form>

@@ -115,9 +115,8 @@ function AuthPage() {
     mode === "signin" ? "Welcome back" : mode === "signup" ? "Create your account" : "Reset your password";
 
   return (
-    <section className="relative overflow-hidden bg-hero">
-      <div className="pointer-events-none absolute inset-0 bg-grid opacity-50" />
-      <div className="relative mx-auto flex max-w-md flex-col px-6 py-16">
+    <section className="bg-hero">
+      <div className="mx-auto flex min-h-[calc(100svh-10rem)] max-w-md flex-col justify-center px-6 py-12">
         <div className="animate-rise rounded-xl border border-border bg-card p-8 shadow-panel">
           <span className="flex h-10 w-10 items-center justify-center rounded-md bg-signal text-primary-foreground">
             <ShieldCheck className="h-5 w-5" strokeWidth={2.5} />
@@ -131,7 +130,7 @@ function AuthPage() {
 
           {mode !== "forgot" && (
             <div className="mt-6 space-y-2.5">
-              <Button variant="google" className="h-10 w-full" onClick={() => social("google")}>
+              <Button variant="google" size="lg" className="w-full" onClick={() => social("google")}>
                 <GoogleLogo />
                 Continue with Google
               </Button>
@@ -142,7 +141,7 @@ function AuthPage() {
               >
                 Continue with Lovable
               </button>
-              <div className="flex items-center gap-3 py-2 font-mono text-xs text-muted-foreground">
+              <div className="flex items-center gap-3 py-2 text-xs text-muted-foreground">
                 <span className="h-px flex-1 bg-border" /> or with email <span className="h-px flex-1 bg-border" />
               </div>
             </div>
@@ -204,7 +203,7 @@ function AuthPage() {
               </p>
             )}
 
-            <Button type="submit" variant="hero" className="h-10 w-full" disabled={busy}>
+            <Button type="submit" variant="hero" size="lg" className="w-full" disabled={busy}>
               {busy
                 ? "Please wait…"
                 : mode === "signin"

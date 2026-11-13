@@ -179,7 +179,7 @@ function AnalyzePage() {
           </div>
         </div>
 
-        <aside className="space-y-5 lg:pt-[26px]">
+        <aside className="space-y-5">
           <div className="space-y-4 rounded-xl border border-border bg-card p-5">
             <div className="space-y-1.5">
               <Label>Language</Label>
@@ -239,7 +239,7 @@ function AnalyzePage() {
           <Button
             type="submit"
             variant="hero"
-            size="xl"
+            size="lg"
             className="w-full"
             disabled={busy || !consent || tooLong || remaining === 0 || !selected}
           >
