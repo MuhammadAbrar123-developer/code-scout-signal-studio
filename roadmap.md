@@ -10,3 +10,5 @@
 - [ ] Optional two-step sign-in (MFA)
 - [x] Design polish: remove "//", "./", "$", "cd .." code-style slashes from labels/nav; more attractive, clearly clickable buttons; cleaner text/heading alignment
 - [ ] AI assistant (Lovable AI) that answers questions about CodeGuard AI
+- [x] Optional "Get corrected code" after analysis (full fixed version of the code)
+- [x] Explain how to connect GitHub

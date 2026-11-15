@@ -3,6 +3,7 @@ import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-ro
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { CorrectedCode } from "@/components/corrected-code";
 import { ReportView, ScoreRing, SeverityBadge } from "@/components/report-view";
 import {
   AlertDialog,
@@ -26,7 +27,7 @@ const reportQuery = (id: string) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("analyses")
-        .select("id, title, language, code, code_purged, provider, summary, risk_level, score, findings, created_at")
+        .select("id, title, language, code, code_purged, provider, summary, risk_level, score, findings, created_at, corrected_code, corrected_notes")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
@@ -126,6 +127,15 @@ function ReportPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+      </div>
+
+      <div className="mt-6">
+        <CorrectedCode
+          id={id}
+          initialCode={data.corrected_code}
+          initialChanges={(data.corrected_notes ?? []) as string[]}
+          disabled={data.code_purged || !data.code}
+        />
       </div>
 
       <div className="mt-6">

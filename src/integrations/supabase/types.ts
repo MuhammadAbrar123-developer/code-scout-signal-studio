@@ -42,6 +42,8 @@ export type Database = {
         Row: {
           code: string
           code_purged: boolean
+          corrected_code: string | null
+          corrected_notes: Json | null
           created_at: string
           findings: Json
           id: string
@@ -56,6 +58,8 @@ export type Database = {
         Insert: {
           code: string
           code_purged?: boolean
+          corrected_code?: string | null
+          corrected_notes?: Json | null
           created_at?: string
           findings?: Json
           id?: string
@@ -70,6 +74,8 @@ export type Database = {
         Update: {
           code?: string
           code_purged?: boolean
+          corrected_code?: string | null
+          corrected_notes?: Json | null
           created_at?: string
           findings?: Json
           id?: string

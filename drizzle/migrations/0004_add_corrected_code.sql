@@ -1,0 +1,1 @@
+ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS corrected_code text, ADD COLUMN IF NOT EXISTS corrected_notes jsonb;
