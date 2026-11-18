@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { LANGUAGES, MAX_CODE_CHARS, MAX_TITLE_CHARS } from "@/lib/analysis";
+import { BUILT_IN_MODEL_IDS, DEFAULT_BUILT_IN_MODEL } from "@/lib/built-in-models";
 import {
   PERSONAL_LIMIT_PER_HOUR,
   PLATFORM_LIMIT_PER_HOUR,
@@ -14,6 +15,7 @@ const inputSchema = z.object({
   title: z.string().trim().max(MAX_TITLE_CHARS),
   language: z.enum(LANGUAGES),
   provider: z.enum(["lovable", ...PROVIDER_IDS]).default("lovable"),
+  model: z.enum(BUILT_IN_MODEL_IDS).default(DEFAULT_BUILT_IN_MODEL),
   code: z
     .string()
     .max(MAX_CODE_CHARS, `Code must be under ${MAX_CODE_CHARS.toLocaleString()} characters.`)
@@ -35,7 +37,7 @@ export const analyzeCode = createServerFn({ method: "POST" })
     type Target = Parameters<typeof runCodeAnalysis>[0]["target"];
 
     // Resolve the provider on the server; the browser only names which one to use.
-    let target: Target = { kind: "lovable" };
+    let target: Target = { kind: "lovable", model: data.model };
     if (data.provider !== "lovable") {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: cred } = await supabaseAdmin
@@ -108,6 +110,7 @@ export const analyzeCode = createServerFn({ method: "POST" })
         code: keepCode ? data.code : "",
         code_purged: !keepCode,
         provider: data.provider,
+        ai_model: target.kind === "lovable" ? data.model : target.model,
         summary: result.summary,
         risk_level: result.risk_level,
         score: result.score,

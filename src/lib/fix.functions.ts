@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Finding } from "@/lib/analysis";
+import { builtInModel, DEFAULT_BUILT_IN_MODEL } from "@/lib/built-in-models";
+import type { AnalysisProvider } from "@/lib/providers";
 import { PERSONAL_LIMIT_PER_HOUR, PLATFORM_LIMIT_PER_HOUR, providerName } from "@/lib/providers";
 
 export type FixResponse =
@@ -17,7 +19,7 @@ export const generateCorrectedCode = createServerFn({ method: "POST" })
     // RLS ensures only the owner can read the report.
     const { data: report } = await supabase
       .from("analyses")
-      .select("code, code_purged, language, provider, findings, corrected_code, corrected_notes")
+      .select("code, code_purged, language, provider, ai_model, findings, corrected_code, corrected_notes")
       .eq("id", data.id)
       .maybeSingle();
     if (!report) return { ok: false, error: "Report not found." };
@@ -28,8 +30,8 @@ export const generateCorrectedCode = createServerFn({ method: "POST" })
 
     const { runCodeFix, AnalysisError } = await import("@/lib/ai/analyze.server");
     type Target = Parameters<typeof runCodeFix>[0]["target"];
-    let target: Target = { kind: "lovable" };
-    const provider = report.provider as "lovable" | Exclude<Target, { kind: "lovable" }>["provider"];
+    let target: Target = { kind: "lovable", model: builtInModel(report.ai_model ?? DEFAULT_BUILT_IN_MODEL)?.id ?? DEFAULT_BUILT_IN_MODEL };
+    const provider = report.provider as AnalysisProvider;
     if (provider !== "lovable") {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: cred } = await supabaseAdmin

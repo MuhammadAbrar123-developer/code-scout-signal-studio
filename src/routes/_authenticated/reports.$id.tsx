@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import type { Finding, Severity } from "@/lib/analysis";
 import { providerName } from "@/lib/providers";
+import { builtInModel } from "@/lib/built-in-models";
 
 const reportQuery = (id: string) =>
   queryOptions({
@@ -27,7 +28,7 @@ const reportQuery = (id: string) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("analyses")
-        .select("id, title, language, code, code_purged, provider, summary, risk_level, score, findings, created_at, corrected_code, corrected_notes")
+        .select("id, title, language, code, code_purged, provider, ai_model, summary, risk_level, score, findings, created_at, corrected_code, corrected_notes")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
@@ -98,6 +99,7 @@ function ReportPage() {
             <span>{data.language}</span>
             <span>·</span>
             <span>{providerName(data.provider)}</span>
+            {data.ai_model && <><span>·</span><span>{builtInModel(data.ai_model)?.name ?? data.ai_model}</span></>}
             <span>·</span>
             <span>{new Date(data.created_at).toLocaleString()}</span>
             <span>·</span>

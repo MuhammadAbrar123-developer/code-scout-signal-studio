@@ -33,7 +33,9 @@ use the editor.
 
 - Shared site header/footer live in `src/components/site-header.tsx` and wrap `<Outlet />` in `src/routes/__root.tsx`; each content section is its own route file so it gets its own head metadata.
 - All colors, gradients and glows are tokens/utilities in `src/styles.css`; components use only those, never raw color classes.
-- AI calls live only in `src/lib/ai/*.server.ts` (Lovable AI Gateway, Responses API, structured output); `src/lib/*.functions.ts` server functions wrap them with `requireSupabaseAuth`, input limits and consent checks, and load server modules via dynamic import inside the handler — keeps keys and prompts off the client.
+- AI calls live only in `src/lib/ai/*.server.ts` (Lovable AI Gateway, native Responses/Messages or compatible chat, structured output); `src/lib/*.functions.ts` server functions wrap them with `requireSupabaseAuth`, input limits and consent checks, and load server modules via dynamic import inside the handler — keeps keys and prompts off the client.
+- Built-in model selection uses a client-safe allowlist verified against the gateway catalog, is validated server-side, and is saved on reports so corrections use the same model; all built-in models share the existing platform quota.
+- Gateway provider access denials are persisted in a server-only table and block fresh calls until access is restored and an operator clears the restriction; no model substitution or automatic retry is permitted.
 - Submitted code is untrusted: it is wrapped in `<untrusted_code>` tags with line numbers, AI output is rendered as plain text only and never executed.
 - Rate limits are enforced server-side by counting rows in `ai_usage_logs`, which users can insert into but never update or delete — so deleting reports can't reset the limit.
 - Signed-in pages live under `src/routes/_authenticated/` (client-only gate redirecting to `/auth`); browser reads use the RLS-scoped client, every user table has owner-only RLS.

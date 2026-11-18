@@ -12,3 +12,4 @@
 - [ ] AI assistant (Lovable AI) that answers questions about CodeGuard AI
 - [x] Optional "Get corrected code" after analysis (full fixed version of the code)
 - [x] Explain how to connect GitHub
+- [x] Direct built-in model picker without user API keys, including corrected code with the chosen model

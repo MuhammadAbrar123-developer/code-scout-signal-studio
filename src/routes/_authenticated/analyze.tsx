@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { LANGUAGES, MAX_CODE_CHARS, MAX_TITLE_CHARS } from "@/lib/analysis";
 import { analyzeCode } from "@/lib/analyze.functions";
+import { BUILT_IN_MODELS, DEFAULT_BUILT_IN_MODEL, builtInModel, type BuiltInModelId } from "@/lib/built-in-models";
 import { providerName, type AnalysisProvider } from "@/lib/providers";
 import { listProviders } from "@/lib/providers.functions";
 
@@ -62,6 +63,7 @@ function AnalyzePage() {
   const [title, setTitle] = useState("");
   const [language, setLanguage] = useState<(typeof LANGUAGES)[number]>("auto");
   const [provider, setProvider] = useState<AnalysisProvider>("lovable");
+  const [model, setModel] = useState<BuiltInModelId>(DEFAULT_BUILT_IN_MODEL);
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState(0);
@@ -116,7 +118,7 @@ function AnalyzePage() {
     }
     setBusy(true);
     try {
-      const res = await analyze({ data: { code, title, language, provider: selected.id, consent: true } });
+      const res = await analyze({ data: { code, title, language, provider: selected.id, model, consent: true } });
       if (!res.ok) {
         toast.error(res.error);
         return;
@@ -197,7 +199,7 @@ function AnalyzePage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>AI provider</Label>
+              <Label>AI access</Label>
               <Select
                 value={selected?.id ?? ""}
                 onValueChange={(v) => setProvider(v as AnalysisProvider)}
@@ -214,6 +216,17 @@ function AnalyzePage() {
                   ))}
                 </SelectContent>
               </Select>
+              {selected?.id === "lovable" && (
+                <div className="space-y-1.5 pt-3">
+                  <Label htmlFor="ai-model">AI model</Label>
+                  <Select value={model} onValueChange={(v) => setModel(v as BuiltInModelId)} disabled={busy}>
+                    <SelectTrigger id="ai-model"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {BUILT_IN_MODELS.map((m) => <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               {selected?.model && (
                 <p className="text-xs text-muted-foreground">Model: {selected.model}</p>
               )}
@@ -221,7 +234,7 @@ function AnalyzePage() {
                 to="/settings/providers"
                 className="inline-flex items-center gap-1.5 pt-1 text-xs font-medium text-primary hover:underline"
               >
-                <KeyRound className="h-3.5 w-3.5" /> Use your own AI key
+                <KeyRound className="h-3.5 w-3.5" /> Optional: personal API keys
               </Link>
             </div>
           </div>
@@ -230,7 +243,7 @@ function AnalyzePage() {
             <Checkbox checked={consent} onCheckedChange={(v) => setConsent(v === true)} className="mt-0.5" />
             <span className="text-muted-foreground">
               <span className="font-medium text-foreground">
-                I agree to send this code to {selected ? selected.label.replace(" (your key)", "") : "the AI provider"} for analysis.
+                I agree to send this code to {selected?.id === "lovable" ? builtInModel(model)?.name : selected ? selected.label.replace(" (your key)", "") : "the AI provider"} for analysis.
               </span>{" "}
               Don't paste passwords, API keys or private data. You can delete reports at any time.
             </span>

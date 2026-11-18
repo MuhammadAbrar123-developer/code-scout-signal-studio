@@ -1,14 +1,16 @@
 import { createOpenAI } from "@ai-sdk/openai";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { NoObjectGeneratedError, Output, streamText } from "ai";
 import { z } from "zod/v4";
 
 import type { AnalysisResult, Finding, Severity } from "@/lib/analysis";
 import type { ProviderId } from "@/lib/providers";
+import { builtInModel, DEFAULT_BUILT_IN_MODEL, type BuiltInModelId } from "@/lib/built-in-models";
+import { createLovableAiGatewayProvider } from "./gateway-helpers.server";
 import { ADAPTERS, PROVIDER_TIMEOUT_MS } from "./providers.server";
 import { createLovableAiGatewayRunIdFetch } from "./run-id.server";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
-const MODEL = "openai/gpt-6-astra";
 
 const severity = z.enum(["low", "medium", "high", "critical"]);
 
@@ -71,10 +73,44 @@ function clampText(s: string, max: number) {
 }
 
 export type AnalysisTarget =
-  | { kind: "lovable" }
+  | { kind: "lovable"; model?: BuiltInModelId }
   | { kind: "personal"; provider: ProviderId; apiKey: string; model: string };
 
 const JSON_HINT = `Respond only with a JSON object with these keys: summary, detected_language, score, risk_level, findings (array of objects with category, severity, title, line, explanation, fix, fixed_code).`;
+
+async function gatewayConfig(target: Extract<AnalysisTarget, { kind: "lovable" }>) {
+  const model = builtInModel(target.model ?? DEFAULT_BUILT_IN_MODEL);
+  if (!model) throw new AnalysisError("That AI model isn't available.", 400);
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: block, error } = await supabaseAdmin.from("ai_gateway_blocks").select("message, status").eq("model", model.id).maybeSingle();
+  if (error) throw new AnalysisError("Couldn't check AI availability. Please try again later.", 503);
+  if (block) throw new AnalysisError(block.message, block.status);
+  const apiKey = process.env["LOVABLE_API_KEY"];
+  if (!apiKey) throw new AnalysisError("The AI service is not configured yet.", 401);
+  const runIdFetch = createLovableAiGatewayRunIdFetch();
+  if (model.protocol === "messages") {
+    const provider = createAnthropic({ baseURL: GATEWAY_URL, apiKey, headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" }, fetch: runIdFetch.fetch });
+    return { model: provider(model.id), maxOutputTokens: 16000, maxRetries: 0 };
+  }
+  if (model.protocol === "chat") {
+    const provider = createLovableAiGatewayProvider(apiKey, undefined, { baseURL: GATEWAY_URL });
+    return { model: provider.chatModel(model.id), maxRetries: 0 };
+  }
+  const provider = createOpenAI({ baseURL: GATEWAY_URL, apiKey, headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" }, fetch: runIdFetch.fetch });
+  return {
+    model: provider.responses(model.id), maxRetries: 0,
+    providerOptions: { openai: { forceReasoning: true, reasoningEffort: "low", reasoningSummary: "auto", store: false, include: ["reasoning.encrypted_content"] } },
+  };
+}
+
+async function handleGatewayFailure(error: unknown, target: AnalysisTarget): Promise<AnalysisError> {
+  const failure = toAnalysisError(error, target.kind === "personal");
+  if (target.kind === "lovable" && (failure.status === 403 || failure.status === 402)) {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("ai_gateway_blocks").upsert({ model: target.model ?? DEFAULT_BUILT_IN_MODEL, message: failure.message, status: failure.status });
+  }
+  return failure;
+}
 
 export async function runCodeAnalysis(input: {
   code: string;
@@ -92,30 +128,12 @@ export async function runCodeAnalysis(input: {
 
   let result;
   if (input.target.kind === "lovable") {
-    const apiKey = process.env["LOVABLE_API_KEY"];
-    if (!apiKey) throw new AnalysisError("The AI service is not configured yet.", 500);
-    const runIdFetch = createLovableAiGatewayRunIdFetch();
-    const provider = createOpenAI({
-      baseURL: GATEWAY_URL,
-      apiKey,
-      headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-      fetch: runIdFetch.fetch,
-    });
     result = streamText({
-      model: provider.responses(MODEL),
-      instructions: INSTRUCTIONS,
-      messages: [{ role: "user", content: userContent }],
+      ...await gatewayConfig(input.target),
+      instructions: `${INSTRUCTIONS}\n\n${JSON_HINT}`,
+      messages: [{ role: "user", content: `${userContent}\n\nReturn JSON.` }],
       output: Output.object({ schema }),
       onError,
-      providerOptions: {
-        openai: {
-          forceReasoning: true,
-          reasoningEffort: "low",
-          reasoningSummary: "auto",
-          store: false,
-          include: ["reasoning.encrypted_content"],
-        },
-      },
     });
   } else {
     const adapter = ADAPTERS[input.target.provider];
@@ -134,7 +152,7 @@ export async function runCodeAnalysis(input: {
   try {
     raw = await result.output;
   } catch (error) {
-    throw toAnalysisError(streamError ?? error, input.target.kind === "personal");
+    throw await handleGatewayFailure(streamError ?? error, input.target);
   }
 
   const lineCount = input.code.split("\n").length;
@@ -192,8 +210,17 @@ function toAnalysisError(error: unknown, personal = false): AnalysisError {
     return new AnalysisError("The AI is busy right now. Please wait a minute and try again.", 429);
   if (status === 402)
     return new AnalysisError("AI credits for this app have run out. The app owner needs to add credits.", 402);
-  if (status === 403)
-    return new AnalysisError("The AI service refused this request.", 403);
+  if ([400, 401, 403, 404].includes(status)) {
+    let message = status === 404 ? "The selected AI model is unavailable." : "The AI service couldn't accept this request.";
+    if (typeof error === "object" && error && "responseBody" in error && typeof error.responseBody === "string") {
+      try {
+        const body = JSON.parse(error.responseBody);
+        const safe = body.message ?? body.error?.message;
+        if (typeof safe === "string") message = safe;
+      } catch { /* retain safe fallback */ }
+    }
+    return new AnalysisError(message, status);
+  }
   return new AnalysisError("The analysis failed. Please try again in a moment.", 502);
 }
 
@@ -227,30 +254,12 @@ export async function runCodeFix(input: {
   };
   let result;
   if (input.target.kind === "lovable") {
-    const apiKey = process.env["LOVABLE_API_KEY"];
-    if (!apiKey) throw new AnalysisError("The AI service is not configured yet.", 500);
-    const runIdFetch = createLovableAiGatewayRunIdFetch();
-    const provider = createOpenAI({
-      baseURL: GATEWAY_URL,
-      apiKey,
-      headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-      fetch: runIdFetch.fetch,
-    });
     result = streamText({
-      model: provider.responses(MODEL),
+      ...await gatewayConfig(input.target),
       instructions: FIX_INSTRUCTIONS,
-      messages: [{ role: "user", content: userContent }],
+      messages: [{ role: "user", content: `${userContent}\n\nReturn a JSON object with corrected_code and changes.` }],
       output: Output.object({ schema: fixSchema }),
       onError,
-      providerOptions: {
-        openai: {
-          forceReasoning: true,
-          reasoningEffort: "low",
-          reasoningSummary: "auto",
-          store: false,
-          include: ["reasoning.encrypted_content"],
-        },
-      },
     });
   } else {
     const adapter = ADAPTERS[input.target.provider];
@@ -268,7 +277,7 @@ export async function runCodeFix(input: {
   try {
     raw = await result.output;
   } catch (error) {
-    throw toAnalysisError(streamError ?? error, input.target.kind === "personal");
+    throw await handleGatewayFailure(streamError ?? error, input.target);
   }
   const code = raw.corrected_code.replace(/^```[\w-]*\n?/, "").replace(/\n?```\s*$/, "");
   return {

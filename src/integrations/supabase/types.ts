@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_gateway_blocks: {
+        Row: {
+          created_at: string
+          message: string
+          model: string
+          status: number
+        }
+        Insert: {
+          created_at?: string
+          message: string
+          model: string
+          status: number
+        }
+        Update: {
+          created_at?: string
+          message?: string
+          model?: string
+          status?: number
+        }
+        Relationships: []
+      }
       ai_usage_logs: {
         Row: {
           created_at: string
@@ -40,6 +61,7 @@ export type Database = {
       }
       analyses: {
         Row: {
+          ai_model: string | null
           code: string
           code_purged: boolean
           corrected_code: string | null
@@ -56,6 +78,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_model?: string | null
           code: string
           code_purged?: boolean
           corrected_code?: string | null
@@ -72,6 +95,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          ai_model?: string | null
           code?: string
           code_purged?: boolean
           corrected_code?: string | null
